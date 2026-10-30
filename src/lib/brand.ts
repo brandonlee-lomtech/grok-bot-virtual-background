@@ -1,3 +1,6 @@
+import type { ExpressionId } from "@/lib/bloub/expressions";
+import type { ShapeId } from "@/lib/bloub/skins";
+
 export const VIRTUAL_BACKGROUND_SIZE = {
   width: 1920,
   height: 1080,
@@ -39,25 +42,43 @@ export const CHARACTER_COLORS: BrandColor[] = BRAND_COLORS.filter(
   (c) => c.id !== "white",
 );
 
-export type Sticker = {
-  id: string;
-  src: string;
+export type BotShapeOption = {
+  id: ShapeId;
   label: string;
 };
 
-/** B&W masters — character fill is applied at runtime. */
-export const STICKERS: Sticker[] = Array.from({ length: 12 }, (_, i) => {
-  const n = String(i + 1).padStart(2, "0");
-  return {
-    id: `sticker-${n}`,
-    src: `/stickers/bw/GrokBot_StickerSet_GrokBot-${n}.svg`,
-    label: `Sticker ${n}`,
-  };
-});
+/** All bloub customiser shapes (English labels). */
+export const BOT_SHAPES: BotShapeOption[] = [
+  { id: "cercle", label: "Circle" },
+  { id: "galet", label: "Pebble" },
+  { id: "squircle", label: "Squircle" },
+  { id: "capsule", label: "Capsule" },
+  { id: "triangle", label: "Triangle" },
+  { id: "hexagone", label: "Hexagon" },
+  { id: "nuage", label: "Cloud" },
+  { id: "goutte", label: "Droplet" },
+];
+
+export type BotFeelingOption = {
+  id: ExpressionId;
+  label: string;
+};
+
+/**
+ * Bright / upbeat rest expressions only (bloub ids, English labels).
+ * Available for every shape — Feeling changes keep the current Shape.
+ */
+export const BOT_FEELINGS: BotFeelingOption[] = [
+  { id: "attentif", label: "Attentive" },
+  { id: "surpris", label: "Surprised" },
+  { id: "excite", label: "Excited" },
+  { id: "curieux", label: "Curious" },
+];
 
 export const DEFAULT_BACKGROUND_HEX = "#457bbe";
 export const DEFAULT_CHARACTER_HEX = "#18b9a4";
-export const DEFAULT_STICKER_ID = "sticker-01";
+export const DEFAULT_SHAPE_ID: ShapeId = "cercle";
+export const DEFAULT_FEELING_ID: ExpressionId = "excite";
 export const DEFAULT_CORNER: Corner = "top-left";
 
 export const WORDMARK_TEXT = "Grok Bot";
@@ -100,6 +121,10 @@ export function inkOnBackground(backgroundHex: string): {
   return { primary: "#ffffff", secondary: "rgba(255, 255, 255, 0.82)" };
 }
 
-export function getSticker(id: string): Sticker {
-  return STICKERS.find((s) => s.id === id) ?? STICKERS[0];
+export function getBotShape(id: ShapeId): BotShapeOption {
+  return BOT_SHAPES.find((s) => s.id === id) ?? BOT_SHAPES[0];
+}
+
+export function getBotFeeling(id: ExpressionId): BotFeelingOption {
+  return BOT_FEELINGS.find((f) => f.id === id) ?? BOT_FEELINGS[0];
 }

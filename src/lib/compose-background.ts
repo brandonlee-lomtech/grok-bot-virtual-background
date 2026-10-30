@@ -5,12 +5,15 @@ import {
   inkOnBackground,
   type Corner,
 } from "@/lib/brand";
-import { tintedStickerUrl } from "@/lib/tint-sticker";
+import type { ExpressionId } from "@/lib/bloub/expressions";
+import type { ShapeId } from "@/lib/bloub/skins";
+import { botSvgObjectUrl } from "@/lib/bot-svg";
 
 export type ComposeBackgroundInput = {
   backgroundHex: string;
   characterHex: string;
-  stickerSrc: string;
+  shapeId: ShapeId;
+  feelingId: ExpressionId;
   corner: Corner;
   /** Horizontally flip output for Zoom's mirrored self-view. */
   mirror?: boolean;
@@ -69,6 +72,31 @@ function isTop(corner: Corner): boolean {
   return corner === "top-left" || corner === "top-right";
 }
 
+/** Draw an image centered inside a box without stretching its aspect ratio. */
+function drawImageContain(
+  ctx: CanvasRenderingContext2D,
+  img: CanvasImageSource & { width: number; height: number },
+  x: number,
+  y: number,
+  boxW: number,
+  boxH: number,
+) {
+  const iw =
+    "naturalWidth" in img && typeof img.naturalWidth === "number"
+      ? img.naturalWidth || img.width
+      : img.width;
+  const ih =
+    "naturalHeight" in img && typeof img.naturalHeight === "number"
+      ? img.naturalHeight || img.height
+      : img.height;
+  if (iw <= 0 || ih <= 0) return;
+
+  const scale = Math.min(boxW / iw, boxH / ih);
+  const dw = iw * scale;
+  const dh = ih * scale;
+  ctx.drawImage(img, x + (boxW - dw) / 2, y + (boxH - dh) / 2, dw, dh);
+}
+
 function drawSafeZone(ctx: CanvasRenderingContext2D, w: number, h: number) {
   const insetX = w * 0.275;
   const insetY = h * 0.22;
@@ -90,8 +118,12 @@ export async function composeVirtualBackground(
   input: ComposeBackgroundInput,
 ): Promise<HTMLCanvasElement> {
   await ensureDisplayFontLoaded();
-  const tintedSrc = await tintedStickerUrl(input.stickerSrc, input.characterHex);
-  const sticker = await loadImage(tintedSrc);
+  const botSrc = botSvgObjectUrl({
+    shapeId: input.shapeId,
+    expressionId: input.feelingId,
+    characterHex: input.characterHex,
+  });
+  const sticker = await loadImage(botSrc);
 
   const { width: w, height: h } = VIRTUAL_BACKGROUND_SIZE;
   const canvas = document.createElement("canvas");
@@ -136,7 +168,7 @@ export async function composeVirtualBackground(
     : clusterLeft + wordmarkWidth + gap;
   const iconY = clusterTop + (clusterHeight - iconSize) / 2;
 
-  ctx.drawImage(sticker, iconX, iconY, iconSize, iconSize);
+  drawImageContain(ctx, sticker, iconX, iconY, iconSize, iconSize);
 
   const textX = isLeft(input.corner)
     ? clusterLeft + iconSize + gap

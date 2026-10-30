@@ -1,6 +1,8 @@
 # Grok Bot Virtual Meetup Backgrounds
 
-Create **1920×1080** virtual backgrounds for Zoom and Google Meet with a Grok Bot sticker, background/character colors, and corner placement.
+Create **1920×1080** virtual backgrounds for Zoom and Google Meet with a dynamic Grok Bot (shape × feeling), background/character colors, and corner placement.
+
+Bot silhouette/expression geometry is adapted from [bloub](https://github.com/jeremy-prt/bloub) (MIT © Jérémy Perret). See [NOTICE](NOTICE). Not affiliated with x.ai.
 
 ## Develop
 

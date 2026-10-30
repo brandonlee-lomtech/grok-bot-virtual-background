@@ -2,18 +2,21 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
+  BOT_FEELINGS,
+  BOT_SHAPES,
   BRAND_COLORS,
   CHARACTER_COLORS,
   CORNERS,
   DEFAULT_BACKGROUND_HEX,
   DEFAULT_CHARACTER_HEX,
   DEFAULT_CORNER,
-  DEFAULT_STICKER_ID,
-  STICKERS,
-  getSticker,
+  DEFAULT_FEELING_ID,
+  DEFAULT_SHAPE_ID,
   normalizeHex,
   type Corner,
 } from "@/lib/brand";
+import type { ExpressionId } from "@/lib/bloub/expressions";
+import type { ShapeId } from "@/lib/bloub/skins";
 import {
   canvasToBlob,
   composeVirtualBackground,
@@ -22,22 +25,21 @@ import {
   downloadBlob,
   virtualBackgroundFilename,
 } from "@/lib/download";
-import { TintedSticker } from "@/components/TintedSticker";
+import { BotAvatar } from "@/components/BotAvatar";
 
 type DownloadVariant = "standard" | "mirror";
 
 export function BackgroundStudio() {
   const [backgroundHex, setBackgroundHex] = useState(DEFAULT_BACKGROUND_HEX);
   const [characterHex, setCharacterHex] = useState(DEFAULT_CHARACTER_HEX);
-  const [stickerId, setStickerId] = useState(DEFAULT_STICKER_ID);
+  const [shapeId, setShapeId] = useState<ShapeId>(DEFAULT_SHAPE_ID);
+  const [feelingId, setFeelingId] = useState<ExpressionId>(DEFAULT_FEELING_ID);
   const [corner, setCorner] = useState<Corner>(DEFAULT_CORNER);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<DownloadVariant | null>(null);
   const [, startTransition] = useTransition();
   const previewUrlRef = useRef<string | null>(null);
-
-  const sticker = getSticker(stickerId);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,7 +50,8 @@ export function BackgroundStudio() {
           const canvas = await composeVirtualBackground({
             backgroundHex,
             characterHex,
-            stickerSrc: sticker.src,
+            shapeId,
+            feelingId,
             corner,
             showSafeZone: true,
           });
@@ -72,7 +75,7 @@ export function BackgroundStudio() {
     return () => {
       cancelled = true;
     };
-  }, [backgroundHex, characterHex, sticker.src, corner]);
+  }, [backgroundHex, characterHex, shapeId, feelingId, corner]);
 
   useEffect(() => {
     return () => {
@@ -87,7 +90,8 @@ export function BackgroundStudio() {
       const canvas = await composeVirtualBackground({
         backgroundHex,
         characterHex,
-        stickerSrc: sticker.src,
+        shapeId,
+        feelingId,
         corner,
         mirror: variant === "mirror",
         showSafeZone: false,
@@ -116,9 +120,9 @@ export function BackgroundStudio() {
           Virtual Meetup backgrounds
         </h1>
         <p className="max-w-2xl text-[var(--muted)]">
-          Pick an icon, background and character colors, and a corner. Branding
-          stays out of the center so your face stays clear on Zoom or Google
-          Meet.
+          Pick a shape and a bright feeling, background and character colors,
+          and a corner. Branding stays out of the center so your face stays
+          clear on Zoom or Google Meet.
         </p>
       </header>
 
@@ -162,29 +166,85 @@ export function BackgroundStudio() {
           />
 
           <div className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-[var(--ink)]">Icon</span>
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-              {STICKERS.map((s) => {
-                const selected = s.id === stickerId;
+            <span className="text-sm font-medium text-[var(--ink)]">Shape</span>
+            <div className="grid grid-cols-4 gap-2">
+              {BOT_SHAPES.map((shape) => {
+                const selected = shapeId === shape.id;
                 return (
                   <button
-                    key={s.id}
+                    key={shape.id}
                     type="button"
-                    title={s.label}
-                    aria-label={s.label}
+                    title={shape.label}
+                    aria-label={`Shape: ${shape.label}`}
                     aria-pressed={selected}
-                    onClick={() => setStickerId(s.id)}
-                    className={`flex aspect-square items-center justify-center rounded-xl border-2 bg-[var(--panel)] p-1.5 transition ${
+                    onClick={() => setShapeId(shape.id)}
+                    className={`flex flex-col items-center gap-1.5 rounded-xl border-2 bg-[var(--panel)] p-2 transition ${
                       selected
                         ? "border-[var(--accent)]"
                         : "border-[var(--border)] hover:border-[var(--muted)]"
                     }`}
                   >
-                    <TintedSticker
-                      src={s.src}
-                      characterHex={characterHex}
-                      className="h-full w-full object-contain"
-                    />
+                    <span className="flex aspect-square w-full items-center justify-center p-1">
+                      <BotAvatar
+                        shapeId={shape.id}
+                        feelingId={DEFAULT_FEELING_ID}
+                        characterHex={characterHex}
+                        className="h-full w-full object-contain"
+                      />
+                    </span>
+                    <span
+                      className={`text-center text-[11px] font-medium leading-tight ${
+                        selected
+                          ? "text-[var(--ink)]"
+                          : "text-[var(--muted)]"
+                      }`}
+                    >
+                      {shape.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-[var(--ink)]">
+              Feeling
+            </span>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {BOT_FEELINGS.map((feeling) => {
+                const selected = feelingId === feeling.id;
+                return (
+                  <button
+                    key={feeling.id}
+                    type="button"
+                    title={feeling.label}
+                    aria-label={`Feeling: ${feeling.label}`}
+                    aria-pressed={selected}
+                    onClick={() => setFeelingId(feeling.id)}
+                    className={`flex flex-col items-center gap-1.5 rounded-xl border-2 bg-[var(--panel)] p-2 transition ${
+                      selected
+                        ? "border-[var(--accent)]"
+                        : "border-[var(--border)] hover:border-[var(--muted)]"
+                    }`}
+                  >
+                    <span className="flex aspect-square w-full max-w-20 items-center justify-center p-1">
+                      <BotAvatar
+                        shapeId={shapeId}
+                        feelingId={feeling.id}
+                        characterHex={characterHex}
+                        className="h-full w-full object-contain"
+                      />
+                    </span>
+                    <span
+                      className={`text-xs font-medium ${
+                        selected
+                          ? "text-[var(--ink)]"
+                          : "text-[var(--muted)]"
+                      }`}
+                    >
+                      {feeling.label}
+                    </span>
                   </button>
                 );
               })}
