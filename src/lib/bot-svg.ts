@@ -85,7 +85,11 @@ export function buildBotSvgMarkup(input: BuildBotSvgInput): string {
 
 const urlCache = new Map<string, string>();
 
-/** Cached blob URL for `<img>` / canvas `Image` loading. */
+/**
+ * Cached data URL for `<img>` / canvas `Image` loading.
+ * Prefer data URLs over `URL.createObjectURL` — blob URLs created during
+ * Next SSR become `blob:nodedata:…` and break in the browser.
+ */
 export function botSvgObjectUrl(input: BuildBotSvgInput): string {
   const size = input.size ?? BOT_SVG_SIZE;
   const key = `${input.shapeId}::${input.expressionId}::${input.characterHex.toLowerCase()}::${size}`;
@@ -93,9 +97,7 @@ export function botSvgObjectUrl(input: BuildBotSvgInput): string {
   if (cached) return cached;
 
   const markup = buildBotSvgMarkup({ ...input, size });
-  const url = URL.createObjectURL(
-    new Blob([markup], { type: "image/svg+xml" }),
-  );
+  const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markup)}`;
   urlCache.set(key, url);
   return url;
 }
